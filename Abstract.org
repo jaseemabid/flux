@@ -30,7 +30,4 @@ Prior knowledge with Flux will obviously help. An open mind to learn and unlearn
 
 ** Speaker Bio
 
-1. I'm Jaseem Abid, currently hacking both UI and backend at Ideadevice. I've
-   been fiddling with JS for around 4 years and have done the same old story of
-   jQuery to Backbone to every other MVC framework out there. Codes JS and
-   Python for a living. Haskell for everything else.
+I'm Jaseem Abid, currently hacking both UI and backend at Ideadevice. I've been fiddling with JS for around 4 years and have done the same old story of jQuery to Backbone to every other MVC framework out there. Codes JS and Python for a living. Haskell for everything else.
