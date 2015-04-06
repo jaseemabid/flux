@@ -1,0 +1,36 @@
+* Funnel Abstract
+
+** Objective
+
+1. Deep dive into flux, the principles and components
+2. Analyze responsibilities of each components and look at a sample implementation
+3. Walk through a non trivial example application and understand data flow and actions.
+4. Show how to do common tasks like routing, error handling etc in a unidirectional data flow model.
+5. Introduce audience to testing UI components and show how cool it is :)
+
+** Description
+
+Gentlemen, you can't fight in here! This is the War Room.
+
+This is the story of a four people UI team at Ideadevice moving from a fairly complicated traditional MVC app using YUI to react and flux, the lessons learned, the joys and pains of it. The results are fairly positive and we are excited to share the experience with a wider community.
+
+One of the most striking facts about Flux is that unlike react, it is a specification rather than a implementation. Multiple implementations of the idea exist and they all differ in some way or the other, leading to much confusion and newcomers tend to get lost in all the details. This talk aims to clarify things a bit and help people understand the ideas.
+
+Talk will mostly concentrate on the original Flux architecture. This is not a react talk and we will only cover the minimum bits of it required to understand the concepts presented. Prior experience wont be necessary. Structuring large complex applications and testing will also be taken seriously.
+
+Individual components of the architecture like the dispatcher and stores will be analyzed in detail and how we implemented each of them with minimum 3rd party libraries.
+
+Eventually we would walk through a simple app, show how the data flows through and how actions propagate.
+
+** Requirements
+
+You need to get the joke references ;)
+
+Prior knowledge with Flux will obviously help. An open mind to learn and unlearn things
+
+** Speaker Bio
+
+1. I'm Jaseem Abid, currently hacking both UI and backend at Ideadevice. I've
+   been fiddling with JS for around 4 years and have done the same old story of
+   jQuery to Backbone to every other MVC framework out there. Codes JS and
+   Python for a living. Haskell for everything else.
