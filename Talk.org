@@ -30,7 +30,7 @@ http://facebook.github.io/flux/docs/overview.html
 - Messages that go through the system
 - Type and Data
 
-* Action
+* Code: Action
 #+BEGIN_SRC js
   {
       "type": "NEW_MESSAGE",
@@ -99,7 +99,6 @@ http://facebook.github.io/flux/docs/overview.html
 #+END_SRC
 
 * ItemStore
-
 #+BEGIN_SRC js2
   var UserStore = new Store({
 
@@ -327,7 +326,6 @@ http://facebook.github.io/flux/docs/overview.html
 - Data dependency between stores
 - Store.dispatchToken
 - IndexStore `waitFor` ItemStore
-
 * Code: WaitFor
 
 #+BEGIN_SRC js2
@@ -402,3 +400,4 @@ http://facebook.github.io/flux/docs/overview.html
 - ErrorStores, Notifications
 - Routers
 - React goodness!
+* That's all folks!
