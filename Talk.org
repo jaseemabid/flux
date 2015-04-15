@@ -1,0 +1,404 @@
+#+TITLE:     How I Learned to Stop Worrying And Love The Flux
+#+AUTHOR:    Jaseem Abid
+#+EMAIL:     j@ideadevice.com
+#+DATE:      2015-04-06 Mon
+
+* Title
+* Hello!
+* Flux logo
+:PROPERTIES:
+:reveal_background: img/flux-logo.svg
+:reveal_background_trans: slide
+:END:
+* React logo
+:PROPERTIES:
+:reveal_background: img/react-logo.png
+:END:
+* Demo
+* Why not MVC ?
+* Jing's Talk
+[[./img/jing.png]]
+http://facebook.github.io/flux/docs/overview.html
+* Opinionated
+- This talk is about how we did it.
+- Take away what you want, innovate.
+
+* Flux model
+[[./img/flux-simple.png]]
+
+* Actions
+- Messages that go through the system
+- Type and Data
+
+* Action
+#+BEGIN_SRC js
+  {
+      "type": "NEW_MESSAGE",
+      "data": {
+          "id": 42,
+          "message": "Hello Metarefresh"
+      }
+  }
+#+END_SRC
+
+* Dispatcher
+- Central broker that sends actions to registered stores
+- We went with Facebook's own implementation
+* Another pub sub model?
+
+- Callbacks are not subscribed to particular events.
+- Every payload is dispatched to every registered callback.
+- Callbacks can be deferred
+
+* Code: Registration example
+#+BEGIN_SRC js2
+  ...
+  // Some events, possible sockets, api requests, etc...
+  Dispatcher.register(function(payload) {
+      if (payload.type === 'NEW_MESSAGE') {
+          console.log(payload.message);
+      }
+  });
+  ...
+
+  ...
+  // Somewhere else
+  Dispatcher.dispatch({
+      type: 'NEW_MESSAGE',
+      message: 'Hello Meta Refresh'
+  });
+  ...
+#+END_SRC
+
+* Stores
+- Thin wrapper around Immutable.js
+- Holds data as well as state
+- Stateful, but not Asynchronous
+- Listens to Actions
+- Emits changes from action payloads
+- ItemStore and IndexStore
+
+* Store
+#+BEGIN_SRC js2
+  class Store {
+      constructor(spec, dispatchToken) {
+          this.dispatchToken = dispatchToken;
+          assign(this, EventEmitter.prototype, spec);
+          this.init();
+      }
+      emitChange() {
+          this.emit('change');
+      }
+      addChangeListener(callback) {
+          this.on('change', callback);
+      }
+      removeChangeListener(callback) {
+          this.removeListener('change', callback);
+      }
+  }
+#+END_SRC
+
+* ItemStore
+
+#+BEGIN_SRC js2
+  var UserStore = new Store({
+
+      getAll: function() {
+          if (Object.keys(this._items).length === 0) {
+              this._items = {
+                  state: 'PENDING'
+              };
+              UserActions.get();
+          }
+          return this._items;
+      },
+
+      getByID: function(id) {
+          if (!this._items[id]) {
+              this._items[id] = {
+                  state: 'PENDING'
+              };
+              UserActions.get(id);
+          }
+          return this._items[id];
+      }
+
+  }, function () { ... });
+
+#+END_SRC
+
+#+BEGIN_SRC js2
+  var UserStore = new Store({
+          ...
+  }, Dispatcher.register(payload) {
+      var type = payload.type,
+          users = payload.users;
+
+      switch(type) {
+          case 'USER_GET_SUCCESS':
+              users.forEach(function(user) {
+                  this._items[user.id] = user;
+              }.bind(this));
+              this.emitChange();
+              break;
+
+          case 'USER_GET_FAILURE':
+              this._items = {
+                  state: 'FAILURE'
+              };
+              this.emitChange();
+              break;
+      };
+  });
+#+END_SRC
+
+* Action Creators
+#+BEGIN_SRC js2
+  UserActions = {
+      get: function(id) {
+          Dispatcher.dispatch({
+              type: 'USER_GET_PENDING'
+          });
+
+          // API Wrapper
+          getUsers(id, function(err, users) {
+              if (err) {
+                  Dispatcher.dispatch({
+                      type: 'USER_GET_FAILURE',
+                      error: err
+                  });
+              } else {
+                  Dispatcher.dispatch({
+                      type: 'USER_GET_SUCCESS',
+                      users: users
+                  });
+              }
+          });
+      }
+  };
+#+END_SRC
+
+* More on stores
+- Not just models and collections
+- Listens and act on actions
+- Stores don't mutate themselves
+- Singletons
+- May talk to other stores, but we avoided it
+
+* Views
+- React
+- Almost stateless
+- Synchronous. No XHR, no promises, no callbacks
+- Views get data from stores and listen for changes
+- render :: State -> HTML
+* Code: User list view
+#+begin_src js2
+  var UserList = React.createClass({
+
+      componentWillMount: function() {},
+
+      componentDidUpdate: function() {},
+
+      getInitialState: function() {},
+
+      getStateFromStores: function() {},
+
+      setStateFromStores: function() {},
+
+      render: function() {}
+  });
+#+end_src
+
+* Code: Getting data from stores
+#+BEGIN_SRC js2
+  ...
+
+  getInitialState: function() {
+      return {
+          users: this.getStateFromStores()
+      };
+  },
+
+  getStateFromStores: function() {
+      return UserListStore.getAll();
+  },
+
+  setStateFromStores: function() {
+      this.setState({
+          users: this.getStateFromStores()
+      });
+  }
+
+  ...
+#+END_SRC
+
+* Code: Views register for store events
+#+begin_src js2
+  ...
+
+  componentDidMount: function() {
+      UserIndexStore.addChangeListener(
+          this.setStateFromStores);
+  },
+
+  componentWillUnmount: function() {
+      UserIndexStore.removeChangeListener(
+          this.setStateFromStores);
+  }
+
+  ...
+#+end_src
+
+* Code: View rendering
+#+BEGIN_SRC js
+  ...
+
+  render: function() {
+      var users = this.state.users;
+
+      return (
+          <table>
+              {users.map(function(user) {
+                  return (
+                      <tr>
+                          <td> {user.name} </td>
+                          <td> {user.email} </td>
+                       </tr>
+                  );
+              })}
+          </table>
+      );
+  }
+
+  ...
+#+END_SRC
+
+* Oops!
+* this.props and this.state
+* Views & Action creators
+[Second flux image here]
+* Views can fire off actions
+#+BEGIN_SRC js2
+  var UserList = React.createClass({
+      ...
+      onSubmit: function(e) {
+          e.preventDefault();
+          if (this.state.isNew) {
+              UserActions.create(this.state.user.toJSON());
+          } else {
+              UserActions.update(this.state.user.toJSON());
+          }
+      }
+      ...
+#+END_SRC
+
+* User action creator does the heavy work
+#+BEGIN_SRC js2
+  UserActions = {
+      ...
+
+      create: function(user) {
+          Dispatcher.dispatch({
+              type: 'USER_CREATE',
+              message: 'Creating User "' + user.username + '"',
+              item: user
+          });
+
+          // The async bit
+          createUser(user).then(function(data) {
+              Dispatcher.dispatch({
+                  type: 'USER_CREATE_SUCCESS',
+                  item: user,
+                  data: data
+              });
+
+          }, function(err) {
+              Dispatcher.dispatch({
+                  type: 'USER_CREATE_FAILURE',
+                  item: user,
+                  error: err
+              });
+          });
+      }
+  }
+#+END_SRC
+
+* Dependent stores
+- Data dependency between stores
+- Store.dispatchToken
+- IndexStore `waitFor` ItemStore
+
+* Code: WaitFor
+
+#+BEGIN_SRC js2
+  class IndexStore extends Store {
+      constructor(ItemStore, spec, dispatcherCallback) {
+          invariant(ItemStore, 'Cannot instantiate IndexStore without ItemStore');
+
+          super(spec, Dispatcher.register(function(payload) {
+
+              if (payload.action.type === this.GET_SUCCESS_ACTION) {
+                  // Wait for all the item store to finish updating it this.
+                  Dispatcher.waitFor([ItemStore.dispatchToken]);
+              ...
+#+END_SRC
+
+* Testing
+- React.addons.TestUtils
+- Mocha vs Jest
+* Code: Testing
+
+#+BEGIN_SRC js2
+  var TestUtils = React.addons.TestUtils,
+      expect = require('expect.js'),
+
+      UserList = require('UserList.jsx'),
+      UserActions = require('UserActions.jsx');
+
+  describe('User list testing', () => {
+
+      it('Renders a loading page', () => {
+          // Render the Expiry tab into the document
+          var userlist = TestUtils.renderIntoDocument(<UserList/>),
+              node = expiry.getDOMNode();
+
+          expect(node.textContent).to.be("LOADING");
+      });
+
+      it('Shows atlest one user', () => {
+
+          // Fire user get action
+          Dispatcher.fire({
+              type: 'USER_GET_SUCCESS',
+              data: [{
+                  name: 'John Doe'
+              }]
+          });
+
+          expect(node.textContent).to.be(...);
+      }):
+
+  });
+
+
+#+END_SRC
+
+* Some lessons learned
+- Fewer network requests in certain cases
+- Testable to a large extend
+- Asynchronous code localized to action creators
+- State localized to stores mostly
+- Views mostly stateless, synchronous
+- Playbacks with actions
+- Detailed analytics
+* Some bad parts
+- Store callbacks end up hairy
+- String types
+* There is more...
+- Optimistic UI
+- Immutable.js backed actions and stores
+- Website "playback"
+- hasEnoughDetails
+- ErrorStores, Notifications
+- Routers
+- React goodness!
