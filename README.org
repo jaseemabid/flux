@@ -1,3 +1,5 @@
-# How I stopped worrying and love the Flux
+# How I Learned to Stop Worrying And Love The Flux
 
 Metarefresh talk, 2015
+
+https://slides.com/jaseemabid/flux
